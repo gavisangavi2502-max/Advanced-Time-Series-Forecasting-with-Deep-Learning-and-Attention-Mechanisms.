@@ -1,26 +1,17 @@
-
+# Generates synthetic hourly series with trend, seasonality, structural break.
 import numpy as np
-import pandas as pd
-
-def generate_data(n=1200):
+import pandas as pd, os
+def generate_series(n=2500, seed=0):
+    np.random.seed(seed)
     t = np.arange(n)
-
-    seasonal = 0.5*np.sin(2*np.pi*t/50)
-    trend = 0.0008*t
-    break_point = int(n*0.6)
-    noise = 0.1*np.random.randn(n)
-
-    x1 = seasonal + trend + noise
-    x2 = np.cos(0.015*t) + 0.2*np.random.randn(n)
-
-    y = 0.4*x1 + 0.3*x2 + 0.2*np.sin(0.01*t) + 0.2*np.random.randn(n)
-
-    # structural break
-    y[break_point:] += 0.8
-
-    df = pd.DataFrame({'x1': x1, 'x2': x2, 'y': y})
-    return df
-
-if __name__ == "__main__":
-    df = generate_data()
-    df.to_csv("data.csv", index=False)
+    trend = 0.005 * t
+    season = 2.0 * np.sin(2 * np.pi * t / 24)
+    noise = 0.6 * np.random.randn(n)
+    series = 10 + trend + season + noise
+    series[1500:] += 4.0  # structural break
+    return pd.DataFrame({'y': series}, index=pd.date_range('2020-01-01', periods=n, freq='H'))
+if __name__ == '__main__':
+    os.makedirs('data', exist_ok=True)
+    df = generate_series()
+    df.to_csv('data/synthetic_series.csv')
+    print('Saved data/synthetic_series.csv', df.shape)
